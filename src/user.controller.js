@@ -62,7 +62,7 @@ const endpoints = {
         } else {
           if (results[0].password===body.password) {
             const signed = signToken(results);
-            res.status(200).send({ token: signed });
+            res.status(200).send({ token: signed, username: results[0].username });
             console.log(
               `User: ${results[0].username} is connected with token: ${signed}`
             );
@@ -90,17 +90,17 @@ const endpoints = {
     jwt.verify(token, "mi-string-secreto", function (err, user) {
       console.log(err);
       if (err) return res.sendStatus(403);
-      req.user = user;
+      req.user = user.user[0].username;
       next();
     });
   },
   protected: async(req, res, next) => {
-    console.log(req.user);
+    console.log("LINEA 98",req.user);
     console.log(req.body.username)
     const userQuery = await pool.query('SELECT username FROM users where username = ?',[req.body.username])
     var subjectsQueries = []
     let rows= ''
-     await pool.query('SELECT name FROM subjects', async(err,rows)=>{
+     await pool.query('SELECT * FROM subjects', async(err,rows)=>{
       
       if(err){throw err}
       else{
@@ -109,8 +109,8 @@ const endpoints = {
     })
     let setValue = (value) => {
       subjectsQueries = value   
-      console.log('queries: ', {user:userQuery.values[0], subjects: subjectsQueries})
-    res.status(200).send({user: userQuery.values[0], subjects: subjectsQueries})
+      console.log('queries: ', {user:req.user, subjects: subjectsQueries})
+    res.status(200).send({user: req.user, subjects: subjectsQueries})
 
     }
     
